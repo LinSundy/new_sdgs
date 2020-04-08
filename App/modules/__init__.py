@@ -1,14 +1,15 @@
+import os
+
 from .common import common
 from .login import login
 from flask_sqlalchemy import SQLAlchemy
-import os
-API = os.environ.get('API_URL')
 db = SQLAlchemy()
+API_URL = os.environ.get('API_URL')
 
 
 def init_register_blueprint(app):
-    app.register_blueprint(common)
-    app.register_blueprint(login)
+    app.register_blueprint(common, url_prefix=API_URL)
+    app.register_blueprint(login, url_prefix=API_URL)
 
 
 def init_db(app):
