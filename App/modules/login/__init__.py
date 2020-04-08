@@ -1,12 +1,12 @@
 from flask import Blueprint
 from flask_restful import Api
 from .views import init_views
+from App.modules import API
 
 from .apis import Login
 
-login = Blueprint('login', __name__)
-
+login = Blueprint('login', __name__, url_prefix=API)
 api = Api(login)
-api.add_resource(Login, '/api/')
+api.add_resource(Login, '/login/')
 
 init_views(login)
