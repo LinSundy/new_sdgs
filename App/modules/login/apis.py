@@ -1,8 +1,8 @@
 from flask_restful import Resource, reqparse
-
+from App.utils import handle_error
 parser = reqparse.RequestParser()
-parser.add_argument('username', required=True, type=str, help='用户名不能为空')
-parser.add_argument('password', required=True, type=str, help='密码不能为空')
+parser.add_argument('username', type=str)
+parser.add_argument('password', type=str)
 
 
 class Login(Resource):
@@ -11,4 +11,7 @@ class Login(Resource):
         args = parser.parse_args()
         username = args.get('username')
         password = args.get('password')
-        print(username, password, '参数')
+        if not username:
+            return handle_error(20001, 'username')
+        if not password:
+            return handle_error(20001, 'password')
