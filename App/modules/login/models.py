@@ -1,4 +1,4 @@
-from App.modules import db
+from App.ext import db
 
 
 class SysUser(db.Model):
