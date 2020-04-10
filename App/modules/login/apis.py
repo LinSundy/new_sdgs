@@ -1,6 +1,8 @@
-from flask_restful import Resource, reqparse
-from App.utils import handle_error, handle_data
-from flask import session, jsonify
+import json
+
+from flask_restful import Resource, reqparse, marshal, fields
+from App.utils import handle_error, handle_data, login_required
+from flask import session, g
 from .models import SysUser
 import uuid
 
@@ -32,5 +34,28 @@ class Login(Resource):
         if password != user.password:
             return handle_error(20000, msg='用户名密码不正确！')
         token = str(uuid.uuid1())
-        session['Authorization'] = token
-        return handle_data(token)
+        info = {
+            'token': token,
+            'user_id': user.id
+        }
+        session['Authorization'] = json.dumps(info)
+        return handle_data(info)
+
+
+class User(Resource):
+    @login_required
+    def get(self):
+        user_files = {
+            'id': fields.Integer,
+            'username': fields.String,
+            'password': fields.String,
+            'avatar': fields.String,
+            'name': fields.String,
+            'roles': fields.List
+        }
+        user = g.user
+        data = marshal(user, user_files)
+        return handle_data(data)
+
+
+
