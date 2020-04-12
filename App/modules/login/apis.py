@@ -30,9 +30,9 @@ class Login(Resource):
         user = SysUser.query.filter(SysUser.username == username).first()
 
         if not user:
-            return handle_error(20000, msg='用户不存在！')
+            return handle_data(False, msg='用户不存在！')
         if password != user.password:
-            return handle_error(20000, msg='用户名密码不正确！')
+            return handle_data(False, msg='用户名密码不正确！')
         token = str(uuid.uuid1())
         info = {
             'token': token,
@@ -42,20 +42,33 @@ class Login(Resource):
         return handle_data(info)
 
 
+class RoleStr(fields.Raw):
+    def format(self, value):
+        return value.name
+
+
 class User(Resource):
     @login_required
     def get(self):
-        user_files = {
+        role_fields = {
+            'id': fields.Integer,
+            'name': fields.String
+        }
+        user_fields = {
             'id': fields.Integer,
             'username': fields.String,
             'password': fields.String,
             'avatar': fields.String,
             'name': fields.String,
-            'roles': fields.List
+            'roles': fields.List(RoleStr(role_fields))
         }
         user = g.user
-        data = marshal(user, user_files)
+        data = marshal(user, user_fields)
         return handle_data(data)
 
 
-
+class LogOut(Resource):
+    @staticmethod
+    def post():
+        session.pop("Authorization", None)
+        return handle_data('')

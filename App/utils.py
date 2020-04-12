@@ -21,28 +21,27 @@ def handle_error(code, name='', **kwargs):
     return res
 
 
-def handle_data(data):
+def handle_data(data, **kwargs):
     res = {
         "code": 20000,
         "data": data,
-        "msg": 'ok'
+        "msg": "%s" % (kwargs.get('msg') or 'ok')
     }
     return res
 
 
 def login_required(fun):
     def wrapper(*args):
+        if not session.get('Authorization'):
+            return handle_error(50014, 'token过期')
         info = json.loads(session.get('Authorization'))
         token = info.get('token')
         user_id = info.get('user_id')
         args = parser.parse_args()
-        if not token:
-            return handle_error(50014, 'token过期')
         req_token = args.get('token')
         if token != req_token:
             return handle_error(50008, 'token失效')
         user = SysUser.query.get(user_id)
-        print(user, 'user')
         g.user = user
         return fun(*args)
     return wrapper
