@@ -11,7 +11,7 @@ def create_app():
     CORS(app, supports_credentials=True)
     app.config['JSON_AS_ASCII'] = False
     app.config['SECRET_KEY'] = os.urandom(24)
-    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=60 * 2)
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=60 * 60)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:devLGM123@39.100.101.91/new_sdgs'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config.update(RESTFUL_JSON=dict(ensure_ascii=False))
