@@ -1,6 +1,7 @@
 alembic==1.4.2
 aniso8601==8.0.0
 click==7.1.1
+demjson==2.2.4
 Flask==1.1.1
 Flask-Cors==3.0.8
 Flask-Migrate==2.5.3
