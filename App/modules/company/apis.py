@@ -112,7 +112,7 @@ class CompanySearchApi(Resource):
     }
 
     @marshal_with(json_fields)
-    def get(self):
+    def post(self):
         args = parser.parse_args()
         page_num = args.get('pageNum')
         page_size = args.get('pageSize')
