@@ -2,7 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
 db = SQLAlchemy()
-migrate = Migrate(compare_type=True)
+migrate = Migrate(compare_type=True, compare_server_default=True)
 
 
 def init_ext(app):

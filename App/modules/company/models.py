@@ -20,8 +20,8 @@ class Company(db.Model):
     contacts = db.Column(db.String(128))  # 联系方式
     contacts1 = db.Column(db.String(128))  # 联系方式2
     recent_situation = db.Column(db.Text(256))  # 近三年情况
-    url = db.Column(db.String(256))  # 公司网址
-    level = db.Column(db.String(10))  # 评级
+    url = db.Column(db.String(1000))  # 公司网址
+    level = db.Column(db.Integer)  # 评级
 
 
 class Records(db.Model):

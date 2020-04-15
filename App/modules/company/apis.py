@@ -1,5 +1,5 @@
 import demjson
-from flask_restful import Resource, reqparse, marshal_with, fields
+from flask_restful import Resource, reqparse, marshal_with, fields, marshal
 from .models import Company, Records
 from ...ext import db
 from ...utils import handle_data
@@ -12,6 +12,37 @@ parser.add_argument('pageNum', type=int)
 parser.add_argument('pageSize', type=int)
 
 
+class StringUndefinedNone(fields.Raw):
+    # 字符串undefined转null
+    def format(self, value):
+        if value == 'undefined':
+            return None
+        else:
+            return str(value)
+
+
+record_fields = {
+    'id': fields.Integer,
+    'content': fields.String,
+    'company_id': fields.Integer
+}
+
+company_fields = {
+    'id': fields.Integer,
+    'name': StringUndefinedNone,
+    'info': StringUndefinedNone,
+    'register_capital': StringUndefinedNone,
+    'industry_type': fields.Integer,
+    'records': fields.Nested(record_fields),
+    'contact_person': StringUndefinedNone,
+    'contacts': StringUndefinedNone,
+    'contacts1': StringUndefinedNone,
+    'recent_situation': StringUndefinedNone,
+    'url': StringUndefinedNone,
+    'level': StringUndefinedNone,
+    'credentials': StringUndefinedNone
+}
+
 class CompanyApi(Resource):
     @staticmethod
     def get():
@@ -21,6 +52,7 @@ class CompanyApi(Resource):
 
     @staticmethod
     def post():
+        # 批量导入合作公司数据
         data = parser.parse_args()
         add_companies = data.get('data')
         company_list = []
@@ -37,6 +69,7 @@ class CompanyApi(Resource):
             recent_situation = company.get('recent_situation')
             url = company.get('url')
             records = company.get('records')
+            credentials = company.get('credentials')
             current_company = Company.query.filter(Company.name.__eq__(name)).first()
             if current_company:
                 current_company.industry_type = industry_type
@@ -48,12 +81,14 @@ class CompanyApi(Resource):
                 current_company.recent_situation = recent_situation
                 current_company.url = url
                 current_company.level = level
+                current_company.credentials = credentials
                 Records.query.filter(Records.company_id.__eq__(current_company.id)).delete()
                 add_company_list.append(current_company)
             else:
                 current_company = Company(name=name, info=info, register_capital=register_capital,
                                           industry_type=industry_type, contact_person=contact_person,
-                                          contacts=contacts, contacts1=contacts1, recent_situation=recent_situation,
+                                          contacts=contacts, credentials=credentials, contacts1=contacts1,
+                                          recent_situation=recent_situation,
                                           url=url, level=level)
                 company_list.append(current_company)
             db.session.add(current_company)
@@ -73,25 +108,6 @@ class CompanyApi(Resource):
 
 
 class CompanySearchApi(Resource):
-    record_fields = {
-        'id': fields.Integer,
-        'content': fields.String,
-        'company_id': fields.Integer
-    }
-    company_fields = {
-        'id': fields.Integer,
-        'name': fields.String,
-        'info': fields.String,
-        'register_capital': fields.String,
-        'industry_type': fields.Integer,
-        'records': fields.Nested(record_fields),
-        'contact_person': fields.String,
-        'contacts': fields.String,
-        'contacts1': fields.String,
-        'recent_situation': fields.String,
-        'url': fields.String,
-        'level': fields.String
-    }
     paginate_fields = {
         'page': fields.Integer,
         'pages': fields.Integer,
@@ -113,16 +129,31 @@ class CompanySearchApi(Resource):
 
     @marshal_with(json_fields)
     def post(self):
+        # 合作公司列表查询
         args = parser.parse_args()
         page_num = args.get('pageNum')
         page_size = args.get('pageSize')
         params_data = demjson.decode(args.get('data'))
-        search_value = params_data.get('search_value') or None
-            # company = Company.query.filter(Company.name.contains(search_value))
-            # try:
-        pagination = Company.query.paginate(page=page_num, per_page=page_size, error_out=False)
-            # except Exception as e:
-            #     pagination = Company.query.paginate(page=page_num-1, per_page=page_size)
+        _total = Company.query.count()
+        _page_num = _total // page_size
+        if _total % page_size > 0:
+            _page_num += 1
+        if page_num > _page_num:
+            page_num = _page_num
+        filter_list = []
+        for key in params_data:
+            if key == 'search_value':
+                search_value = params_data.get('search_value') or ''
+                filter_list.append(Company.name.contains(search_value))
+            if key == 'level':
+                level = int(params_data.get('level')) if params_data.get('level') else 0
+                filter_list.append(Company.level >= level)
+            if key == 'type':
+                industry_type = params_data.get('type')
+                print(industry_type, type(industry_type), 'industry_type')
+                if industry_type:
+                    filter_list.append(Company.industry_type == industry_type)
+        pagination = Company.query.filter(*filter_list).paginate(page=page_num, per_page=page_size, error_out=False)
         paginate_data = dict()
         paginate_data['page'] = pagination.page
         paginate_data['pages'] = pagination.pages
@@ -138,6 +169,7 @@ class CompanySearchApi(Resource):
 
     @staticmethod
     def delete():
+        # 删除具体的合作公司
         args = parser.parse_args()
         company_id = args.get('id')
         try:
@@ -153,6 +185,7 @@ class CompanySearchApi(Resource):
 class RecordApi(Resource):
     @staticmethod
     def post():
+        # 新增一条具体合作公司的 合作项目名称
         args = parser.parse_args()
         name = args.get('name')
         company_id = args.get('id')
@@ -167,6 +200,7 @@ class RecordApi(Resource):
 
     @staticmethod
     def delete():
+        # 删除一条合作项目名称
         args = parser.parse_args()
         record_id = args.get('id')
         record = Records.query.get(record_id)
@@ -179,10 +213,10 @@ class RecordApi(Resource):
 
     @staticmethod
     def put():
+        # 修改合作项目的名称
         args = parser.parse_args()
         record_id = args.get('id')
         name = args.get('name')
-        print(record_id, '我娃')
         record = Records.query.get(record_id)
         record.content = name
         try:
@@ -194,11 +228,25 @@ class RecordApi(Resource):
 
 
 class AddOneCompany(Resource):
+    data = {
+        'code': fields.Integer,
+        'data': fields.Nested(company_fields),
+        'msg': fields.String
+    }
+
+    @marshal_with(data)
+    def get(self):
+        # 获取单个的合作公司信息
+        args = parser.parse_args()
+        company_id = args.get('id')
+        company = Company.query.get(company_id)
+        return handle_data(company)
+
     @staticmethod
     def post():
+        # 新增单个的合作公司
         args = parser.parse_args()
         company = demjson.decode(args.get('data'))
-        print(company, '公司')
         name = company.get('name')
         industry_type = company.get('industry_type')
         info = company.get('info')
@@ -209,11 +257,12 @@ class AddOneCompany(Resource):
         level = company.get('level')
         recent_situation = company.get('recent_situation')
         url = company.get('url')
+        credentials = company.get('credentials')
         records = company.get('records')
         current_company = Company(name=name, info=info, register_capital=register_capital,
                                   industry_type=industry_type, contact_person=contact_person,
                                   contacts=contacts, contacts1=contacts1, recent_situation=recent_situation,
-                                  url=url, level=level)
+                                  url=url, level=level, credentials=credentials)
         db.session.add(current_company)
         db.session.flush()
         for record in records:
@@ -227,10 +276,10 @@ class AddOneCompany(Resource):
 
     @staticmethod
     def put():
+        # 修改单个合作公司的信息
         args = parser.parse_args()
         data = args.get('data')
         company = demjson.decode(data)
-        print(company, '参数')
         name = company.get('name')
         industry_type = company.get('industry_type')
         info = company.get('info')
@@ -239,6 +288,7 @@ class AddOneCompany(Resource):
         contacts = company.get('contacts')
         contacts1 = company.get('contacts1')
         level = company.get('level')
+        credentials = company.get('credentials')
         recent_situation = company.get('recent_situation')
         url = company.get('url')
         company_id = company.get('id')
@@ -253,6 +303,7 @@ class AddOneCompany(Resource):
         current_company.level = level
         current_company.recent_situation = recent_situation
         current_company.url = url
+        current_company.credentials = credentials
         try:
             db.session.add(current_company)
             db.session.commit()

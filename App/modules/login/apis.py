@@ -19,6 +19,7 @@ class Login(Resource):
 
     @staticmethod
     def post():
+        # 登陆
         args = parser.parse_args()
         username = args.get('username')
         password = args.get('password')
@@ -50,6 +51,7 @@ class RoleStr(fields.Raw):
 class User(Resource):
     @login_required
     def get(self):
+        # 获取用户信息
         role_fields = {
             'id': fields.Integer,
             'name': fields.String
@@ -70,5 +72,6 @@ class User(Resource):
 class LogOut(Resource):
     @staticmethod
     def post():
+        # 登出
         session.pop("Authorization", None)
         return handle_data('')

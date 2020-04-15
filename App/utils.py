@@ -11,7 +11,7 @@ parser.add_argument('token', type=str)
 def handle_error(code, name='', **kwargs):
     res = {
         "code": code,
-        "data": None,
+        "data": {},
         "msg": ''
     }
     if code == 20001:
