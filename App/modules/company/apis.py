@@ -43,6 +43,7 @@ company_fields = {
     'credentials': StringUndefinedNone
 }
 
+
 class CompanyApi(Resource):
     @staticmethod
     def get():
@@ -227,6 +228,42 @@ class RecordApi(Resource):
         return handle_data({'id': record_id, 'content': name, 'company_id': record.id})
 
 
+def get_params(company):
+    name = company.get('name')
+    industry_type = company.get('industry_type')
+    info = company.get('info')
+    register_capital = company.get('register_capital')
+    contact_person = company.get('contact_person')
+    contacts = company.get('contacts')
+    contacts1 = company.get('contacts1')
+    level = company.get('level')
+    recent_situation = company.get('recent_situation')
+    url = company.get('url')
+    credentials = company.get('credentials')
+    return {
+        'name': name,
+        'industry_type': industry_type,
+        'info': info,
+        'register_capital': register_capital,
+        'contact_person': contact_person,
+        'contacts': contacts,
+        'contacts1': contacts1,
+        'level': level,
+        'recent_situation': recent_situation,
+        'url': url,
+        'credentials': credentials
+    }
+
+
+def create_company(data):
+    company = Company(name=data['name'], info=data['info'], register_capital=data['register_capital'],
+                      industry_type=data['industry_type'], contact_person=data['contact_person'],
+                      contacts=data['contacts'], contacts1=data['contacts1'],
+                      recent_situation=data['recent_situation'],
+                      url=data['url'], level=data['level'], credentials=data['credentials'])
+    return company
+
+
 class AddOneCompany(Resource):
     data = {
         'code': fields.Integer,
@@ -247,22 +284,9 @@ class AddOneCompany(Resource):
         # 新增单个的合作公司
         args = parser.parse_args()
         company = demjson.decode(args.get('data'))
-        name = company.get('name')
-        industry_type = company.get('industry_type')
-        info = company.get('info')
-        register_capital = company.get('register_capital')
-        contact_person = company.get('contact_person')
-        contacts = company.get('contacts')
-        contacts1 = company.get('contacts1')
-        level = company.get('level')
-        recent_situation = company.get('recent_situation')
-        url = company.get('url')
-        credentials = company.get('credentials')
+        json_params_data = get_params(company)
         records = company.get('records')
-        current_company = Company(name=name, info=info, register_capital=register_capital,
-                                  industry_type=industry_type, contact_person=contact_person,
-                                  contacts=contacts, contacts1=contacts1, recent_situation=recent_situation,
-                                  url=url, level=level, credentials=credentials)
+        current_company = create_company(json_params_data)
         db.session.add(current_company)
         db.session.flush()
         for record in records:
