@@ -133,7 +133,7 @@ class CompanySearchApi(Resource):
         # 合作公司列表查询
         args = parser.parse_args()
         page_num = args.get('pageNum') or 1
-        page_size = args.get('pageSize')
+        page_size = args.get('pageSize') or 15
         params_data = demjson.decode(args.get('data'))
         _total = Company.query.count()
         _page_num = _total // page_size
