@@ -132,7 +132,7 @@ class CompanySearchApi(Resource):
     def post(self):
         # 合作公司列表查询
         args = parser.parse_args()
-        page_num = args.get('pageNum')
+        page_num = args.get('pageNum') or 1
         page_size = args.get('pageSize')
         params_data = demjson.decode(args.get('data'))
         _total = Company.query.count()
