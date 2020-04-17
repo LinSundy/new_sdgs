@@ -139,9 +139,7 @@ class CompanySearchApi(Resource):
         _page_num = _total // page_size
         if _total % page_size > 0:
             _page_num += 1
-        print(page_num, type(page_num), 1)
-        print(_page_num, type(_page_num), 2)
-        if int(page_num) > int(_page_num):
+        if int(page_num) > _page_num:
             page_num = _page_num
         filter_list = []
         for key in params_data:
