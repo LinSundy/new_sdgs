@@ -44,6 +44,42 @@ company_fields = {
 }
 
 
+def get_params(company):
+    name = company.get('name')
+    industry_type = company.get('industry_type')
+    info = company.get('info')
+    register_capital = company.get('register_capital')
+    contact_person = company.get('contact_person')
+    contacts = company.get('contacts')
+    contacts1 = company.get('contacts1')
+    level = company.get('level')
+    recent_situation = company.get('recent_situation')
+    url = company.get('url')
+    credentials = company.get('credentials')
+    return {
+        'name': name,
+        'industry_type': industry_type,
+        'info': info,
+        'register_capital': register_capital,
+        'contact_person': contact_person,
+        'contacts': contacts,
+        'contacts1': contacts1,
+        'level': level,
+        'recent_situation': recent_situation,
+        'url': url,
+        'credentials': credentials
+    }
+
+
+def create_company(data):
+    company = Company(name=data['name'], info=data['info'], register_capital=data['register_capital'],
+                      industry_type=data['industry_type'], contact_person=data['contact_person'],
+                      contacts=data['contacts'], contacts1=data['contacts1'],
+                      recent_situation=data['recent_situation'],
+                      url=data['url'], level=data['level'], credentials=data['credentials'])
+    return company
+
+
 class CompanyApi(Resource):
     @staticmethod
     def get():
@@ -59,38 +95,23 @@ class CompanyApi(Resource):
         company_list = []
         add_company_list = []
         for index, company in enumerate(demjson.decode(add_companies)):
-            name = company.get('name')
-            industry_type = company.get('industry_type')
-            info = company.get('info')
-            register_capital = company.get('register_capital')
-            contact_person = company.get('contact_person')
-            contacts = company.get('contacts')
-            contacts1 = company.get('contacts1')
-            level = company.get('level')
-            recent_situation = company.get('recent_situation')
-            url = company.get('url')
+            params_data = get_params(company)
             records = company.get('records')
-            credentials = company.get('credentials')
-            current_company = Company.query.filter(Company.name.__eq__(name)).first()
+            current_company = Company.query.filter(Company.name.__eq__(params_data['name'])).first()
             if current_company:
-                current_company.industry_type = industry_type
-                current_company.info = info
-                current_company.register_capital = register_capital
-                current_company.contact_person = contact_person
-                current_company.contacts = contacts
-                current_company.contacts1 = contacts1
-                current_company.recent_situation = recent_situation
-                current_company.url = url
-                current_company.level = level
-                current_company.credentials = credentials
+                current_company.info = params_data['info']
+                current_company.register_capital = params_data['register_capital']
+                current_company.contact_person = params_data['contact_person']
+                current_company.contacts = params_data['contacts']
+                current_company.contacts1 = params_data['contacts1']
+                current_company.recent_situation = params_data['recent_situation']
+                current_company.url = params_data['url']
+                current_company.level = params_data['level']
+                current_company.credentials = params_data['credentials']
                 Records.query.filter(Records.company_id.__eq__(current_company.id)).delete()
                 add_company_list.append(current_company)
             else:
-                current_company = Company(name=name, info=info, register_capital=register_capital,
-                                          industry_type=industry_type, contact_person=contact_person,
-                                          contacts=contacts, credentials=credentials, contacts1=contacts1,
-                                          recent_situation=recent_situation,
-                                          url=url, level=level)
+                current_company = create_company(params_data)
                 company_list.append(current_company)
             db.session.add(current_company)
             db.session.flush()
@@ -226,42 +247,6 @@ class RecordApi(Resource):
         except Exception as e:
             db.session.rollback()
         return handle_data({'id': record_id, 'content': name, 'company_id': record.id})
-
-
-def get_params(company):
-    name = company.get('name')
-    industry_type = company.get('industry_type')
-    info = company.get('info')
-    register_capital = company.get('register_capital')
-    contact_person = company.get('contact_person')
-    contacts = company.get('contacts')
-    contacts1 = company.get('contacts1')
-    level = company.get('level')
-    recent_situation = company.get('recent_situation')
-    url = company.get('url')
-    credentials = company.get('credentials')
-    return {
-        'name': name,
-        'industry_type': industry_type,
-        'info': info,
-        'register_capital': register_capital,
-        'contact_person': contact_person,
-        'contacts': contacts,
-        'contacts1': contacts1,
-        'level': level,
-        'recent_situation': recent_situation,
-        'url': url,
-        'credentials': credentials
-    }
-
-
-def create_company(data):
-    company = Company(name=data['name'], info=data['info'], register_capital=data['register_capital'],
-                      industry_type=data['industry_type'], contact_person=data['contact_person'],
-                      contacts=data['contacts'], contacts1=data['contacts1'],
-                      recent_situation=data['recent_situation'],
-                      url=data['url'], level=data['level'], credentials=data['credentials'])
-    return company
 
 
 class AddOneCompany(Resource):
