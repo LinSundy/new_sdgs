@@ -153,9 +153,9 @@ class CompanySearchApi(Resource):
     def post(self):
         # 合作公司列表查询
         args = parser.parse_args()
-        page_num = args.get('pageNum') or 1
-        page_size = args.get('pageSize') or 15
         params_data = demjson.decode(args.get('data'))
+        page_num = params_data.get('pageNum') or 1
+        page_size = params_data.get('pageSize')
         _total = Company.query.count()
         _page_num = _total // page_size
         if _total % page_size > 0:
@@ -168,11 +168,10 @@ class CompanySearchApi(Resource):
                 search_value = params_data.get('search_value') or ''
                 filter_list.append(Company.name.contains(search_value))
             if key == 'level':
-                level = int(params_data.get('level')) if params_data.get('level') else 0
+                level = params_data.get('level') if params_data.get('level') else 0
                 filter_list.append(Company.level >= level)
-            if key == 'type':
-                industry_type = params_data.get('type')
-                print(industry_type, type(industry_type), 'industry_type')
+            if key == 'industry_type':
+                industry_type = params_data.get('industry_type') if params_data.get('industry_type') else 0
                 if industry_type:
                     filter_list.append(Company.industry_type == industry_type)
         pagination = Company.query.filter(*filter_list).paginate(page=page_num, per_page=page_size, error_out=False)
