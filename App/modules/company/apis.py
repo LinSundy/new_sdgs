@@ -1,6 +1,6 @@
 import demjson
 from flask_restful import Resource, reqparse, marshal_with, fields, marshal
-from .models import Company, Records
+from .models import Company, Records, Industry
 from ...ext import db
 from ...utils import handle_data
 
@@ -23,7 +23,7 @@ class StringUndefinedNone(fields.Raw):
 
 record_fields = {
     'id': fields.Integer,
-    'content': fields.String,
+    'content': StringUndefinedNone,
     'company_id': fields.Integer
 }
 
@@ -318,3 +318,16 @@ class AddOneCompany(Resource):
         except Exception as e:
             db.session.rollback()
         return handle_data('修改成功!')
+
+
+class IndustryApi(Resource):
+    @staticmethod
+    def post():
+        args = parser.parse_args()
+        industry_id = args.get('id')
+        industry_name = args.get('name')
+        industry_instance = Industry(id=industry_id, name=industry_name)
+        db.session.add(industry_instance)
+        db.session.commit()
+        return handle_data('成功')
+
