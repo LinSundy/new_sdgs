@@ -12,7 +12,7 @@ def create_app():
     app.config['JSON_AS_ASCII'] = False
     app.config['SECRET_KEY'] = os.urandom(24)
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Adminnistrator123456@8.210.39.249/new_sdgs'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Administrator123456@8.210.39.249/new_sdgs'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config.update(RESTFUL_JSON=dict(ensure_ascii=False))
     init_ext(app)
